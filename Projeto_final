@@ -8,6 +8,7 @@ SEEV - Sistemas Elétricos e Eletrónicos de Veículos
 TP1:  Sistema de controlo de temperatura
 
 LINK: https://www.youtube.com/watch?v=TCfmfSDqwsk
+LINK: https://github.com/rodrisilva00/SEEV_PROJETO/blob/main/Projeto_final
 
 */
 
@@ -45,7 +46,7 @@ LINK: https://www.youtube.com/watch?v=TCfmfSDqwsk
 #define BUZZER_PIN 27
 
 // Pino IRQ do RC522 para interrupção
-#define IRQ_PIN 32     
+#define IRQ_PIN 32
 
 // Definição do limiar de temperatura para ativar a ventoinha
 #define TEMPERATURE_THRESHOLD 25
@@ -84,8 +85,6 @@ void IRAM_ATTR handleRFIDInterrupt() {
 //Tarefa de incialização do sistema
 void TaskInitialize(void *pvParameters) {
     InitMessage initMsg;
-    bool estado_login = false;
-
     // Inicialização do display TFT
     Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCK, TFT_RST);
     tft.initR(INITR_BLACKTAB);
@@ -118,10 +117,6 @@ void TaskInitialize(void *pvParameters) {
                 vTaskDelete(NULL);  // Autodestruir a tarefa após sucesso
             }
         }
-        xQueuePeek(rfidQueue, &estado_login, portMAX_DELAY);
-        if (estado_login) {
-            vTaskDelete(NULL);
-        }
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
@@ -145,7 +140,7 @@ void TaskReadSensor(void *pvParameters) {
             Serial.println("Falha ao enviar dados para a fila systemDataQueue!");
         }
 
-        vTaskDelay(1000 / portTICK_PERIOD_MS); 
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 
@@ -180,7 +175,7 @@ void TaskBrain(void *pvParameters) {
             }
         }
 
-        vTaskDelay(500 / portTICK_PERIOD_MS);  
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
 
@@ -213,9 +208,9 @@ void TaskUpdateDisplay(void *pvParameters) {
                 tft.println(buffer);
 
                 // Desenha uma barra de temperatura
-                int tempBarLength = map(systemData.temperature, 0, 40, 0, 100);  
-                tft.fillRect(10, 55, tempBarLength, 10, ST7735_RED);  
-                tft.fillRect(10 + tempBarLength, 55, 100 - tempBarLength, 10, ST7735_BLUE);  
+                int tempBarLength = map(systemData.temperature, 0, 40, 0, 100);
+                tft.fillRect(10, 55, tempBarLength, 10, ST7735_RED);
+                tft.fillRect(10 + tempBarLength, 55, 100 - tempBarLength, 10, ST7735_BLUE);
 
                 // Imprime a humidade no display
                 tft.setCursor(10, 80);
@@ -223,16 +218,16 @@ void TaskUpdateDisplay(void *pvParameters) {
                 tft.println(buffer);
 
                 // Desenha uma barra de humidade
-                int humBarLength = map(systemData.humidity, 0, 100, 0, 100);  
-                tft.fillRect(10, 95, humBarLength, 10, ST7735_CYAN);  
+                int humBarLength = map(systemData.humidity, 0, 100, 0, 100);
+                tft.fillRect(10, 95, humBarLength, 10, ST7735_CYAN);
 
                 // Exibe o estado da ventoinha
                 tft.setCursor(10, 120);
                 if (systemData.fanState) {
-                    tft.setTextColor(ST7735_GREEN, ST7735_BLACK);  
+                    tft.setTextColor(ST7735_GREEN, ST7735_BLACK);
                     tft.println("Fan: ON ");
                 } else {
-                    tft.setTextColor(ST7735_WHITE, ST7735_BLACK);  
+                    tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
                     tft.println("Fan: OFF");
                 }
 
@@ -333,7 +328,7 @@ void setup() {
     pinMode(FAN_PIN, OUTPUT);
     pinMode(IRQ_PIN, INPUT_PULLUP);
     attachInterrupt(IRQ_PIN, handleRFIDInterrupt, RISING);
-	
+
     // Inicializa as queues
     systemDataQueue = xQueueCreate(1, sizeof(SystemData));
     rfidQueue = xQueueCreate(1, sizeof(bool));
